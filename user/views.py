@@ -62,7 +62,7 @@ class RegisterAPIView(APIView):
 # 유저 인증
 class LoginAPIView(APIView):
     def post(self, request):
-        user = authenticate(email=request.data["email"], password=request.data["password"])
+        user = authenticate(email=request.data["email"], password=request.data["password"], nickname=request.data["nickname"])
         # 이미 회원가입 된 유저일 때
         serializer = UserSerializer(instance=user)
         update_last_login(None, user)
@@ -92,8 +92,6 @@ from django.shortcuts import redirect
 from allauth.socialaccount.models import SocialAccount
 
 from rest_framework.decorators import api_view
-
-from rest_framework.authtoken.models import Token
 
 '''
 1. google_login 실행 후 로그인 성공 시, Callback 함수로 Code 값 전달받음
