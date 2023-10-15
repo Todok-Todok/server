@@ -7,7 +7,12 @@ urlpatterns = [
     path('base/login/', views.LoginAPIView.as_view()),
     path('token/refresh/', TokenRefreshView.as_view()), # 토큰 재발급
     # 소셜로그인
+    # 구글
     path('google/login/', views.google_login, name='google_login'),
     path('google/callback/', views.google_callback, name='google_callback'),  
     path('google/login/finish/', views.GoogleLogin.as_view(), name='google_login_todjango'),
+    # 카카오
+    path('kakao/login/', views.kakao_login, name='kakao_login'),
+    path('kakao/callback/', views.kakao_callback, name='kakao_callback'),
+    path('kakao/login/finish/', views.KakaoLogin.as_view(), name='kakao_login_todjango'),
 ]
