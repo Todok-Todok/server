@@ -17,7 +17,6 @@ import secret
 @staticmethod
 def generate_tokens(user: User):
     refresh = RefreshToken.for_user(user)
-
     return str(refresh.access_token), str(refresh)
 
 
@@ -100,20 +99,22 @@ from rest_framework.decorators import api_view
 3.  Access Token으로 Email 값을 Google에게 요청
 4. 전달받은 Email, Access Token, Code를 바탕으로 회원가입/로그인 진행
 '''
+
 state = getattr(secret, 'STATE')
 BASE_URL = 'http://127.0.0.1:8000/'
 GOOGLE_CALLBACK_URI = BASE_URL + 'user/google/callback/'
 KAKAO_CALLBACK_URI = BASE_URL + 'user/kakao/callback/'
 
 # Create your views here.
-# 프론트가 구현할 함수
+
 def google_login(request):
     """
     Code Request
     """
     client_id = getattr(secret, "SOCIAL_AUTH_GOOGLE_CLIENT_ID")
-    # scope : email과 profile 요청 !
+    # scope : email 요청 !
     return redirect(f"https://accounts.google.com/o/oauth2/v2/auth?client_id={client_id}&response_type=code&redirect_uri={GOOGLE_CALLBACK_URI}&scope=email profile")
+
 
 @api_view(('POST','GET'))
 def google_callback(request):
@@ -133,7 +134,6 @@ def google_callback(request):
     """
     UserInfo Request
     """
-    # ---- 여기서부터 백 ----
     info_req = requests.get(
         f"https://www.googleapis.com/userinfo/v2/me?access_token={access_token}")
     email_req_status = info_req.status_code
@@ -141,9 +141,11 @@ def google_callback(request):
         return Response({'err_msg': 'failed to get email'}, status=status.HTTP_400_BAD_REQUEST)
 
     info_req_json = info_req.json()
-    email = info_req_json.get('email')
-    print(info_req_json)
-
+    email = info_req_json.get("email")
+    print(email)
+    print(access_token)
+    #data = {'access_token': access_token, 'code': code}
+    data = {'access_token' : access_token}    
     """
     Signup or Signin Request
     """
@@ -158,7 +160,6 @@ def google_callback(request):
         if social_user.provider != 'google':
             return Response({'err_msg': 'no matching social type'}, status=status.HTTP_400_BAD_REQUEST)
         # 기존에 Google로 가입된 유저
-        data = {'access_token': access_token, 'code': code}
         accept = requests.post(
             f"{BASE_URL}user/google/login/finish/", data=data)
         accept_status = accept.status_code
@@ -169,8 +170,6 @@ def google_callback(request):
         return Response(accept_json)
     except User.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
-        data = {'access_token': access_token, 'code': code}
-        print("access token = " + access_token)
         accept = requests.post(
             f"{BASE_URL}user/google/login/finish/", data=data)
         accept_status = accept.status_code
@@ -208,7 +207,6 @@ def kakao_callback(request):
     """
     Email Request
     """
-    # ---- 여기서부터 백 ----
     profile_request = requests.get(
         "https://kapi.kakao.com/v2/user/me", headers={"Authorization": f"Bearer {access_token}"})
     profile_json = profile_request.json()
@@ -232,7 +230,7 @@ def kakao_callback(request):
             return Response({'err_msg': 'email exists but not social user'}, status=status.HTTP_400_BAD_REQUEST)
         if social_user.provider != 'kakao':
             return Response({'err_msg': 'no matching social type'}, status=status.HTTP_400_BAD_REQUEST)
-        data = {'access_token': access_token, 'code': code}
+        data = {'access_token': access_token}
         accept = requests.post(
             f"{BASE_URL}user/kakao/login/finish/", data=data)
         accept_status = accept.status_code
@@ -243,7 +241,7 @@ def kakao_callback(request):
         return Response(accept_json)
     except User.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
-        data = {'access_token': access_token, 'code': code}
+        data = {'access_token': access_token}
         accept = requests.post(
             f"{BASE_URL}user/kakao/login/finish/", data=data)
         accept_status = accept.status_code

@@ -38,8 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # swagger package
+    'drf_yasg',
     # myapp
     'user',
+    'book',
+    'question',
     # django-rest-framework
     'rest_framework',
     'rest_framework.authtoken',
