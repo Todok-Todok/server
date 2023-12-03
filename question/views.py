@@ -26,9 +26,12 @@ class QuestionShareView(APIView):
     
 class QuestionReceiveView(APIView):
     def get(self, request, book_id):
-        samplelist = QuestionService(QuestionSelector).receive_question(book_id)
-        return Response(samplelist, status=status.HTTP_200_OK)
-    
+        try:
+            samplelist = QuestionService(QuestionSelector).receive_question(book_id)
+            return Response(samplelist, status=status.HTTP_200_OK)
+        except ValueError:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        
 class QuestionSaveView(APIView):
     def post(self, request, question_id, user_id):
         try:

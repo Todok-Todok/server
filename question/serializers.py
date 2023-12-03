@@ -1,5 +1,5 @@
 from .models import Question,UserQuestion
-from rest_framework import serializers, validators
+from rest_framework import serializers
 
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:

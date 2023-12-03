@@ -10,7 +10,7 @@ from typing import Optional
 
 class AbstractQuestionSelector(metaclass=ABCMeta):
     @abstractmethod
-    def get_user_question_received(self, user_id: int, book_id: int) -> "Optional[QuerySet[UserQuestion]]":
+    def get_user_question_received(user_id: int, book_id: int) -> "Optional[QuerySet[UserQuestion]]":
         pass
     
     @abstractmethod
@@ -18,15 +18,15 @@ class AbstractQuestionSelector(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def get_question_queryset_by_userquestion(self, book_id: int) -> "QuerySet[Question]":
+    def get_question_queryset_by_userquestion(book_id: int) -> "QuerySet[Question]":
         pass
     
     @abstractmethod
-    def get_users_by_question_id(self, question_id: int) -> "QuerySet[User]":
+    def get_users_by_question_id(question_id: int) -> "QuerySet[User]":
         pass
     
     @abstractmethod
-    def get_each_userquestion(self, user_id: int, question_id: int) -> UserQuestion:
+    def get_each_userquestion(user_id: int, question_id: int) -> UserQuestion:
         pass
     
     @abstractmethod
