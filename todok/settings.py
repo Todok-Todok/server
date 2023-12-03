@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'user',
     'book',
     'question',
+    'review',
     # django-rest-framework
     'rest_framework',
     'rest_framework.authtoken',

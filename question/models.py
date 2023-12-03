@@ -19,7 +19,7 @@ class UserQuestion(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, null=True)
     question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
-    opinion = models.TextField(null=True)
+    opinion = models.TextField(default="")
     like = models.BooleanField(default=False)
     q_owner = models.BooleanField(default=False)
 

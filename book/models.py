@@ -18,7 +18,7 @@ class Book(models.Model):
 class UserBook(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, null=True)
-    status = models.IntegerField()       # 1 : 읽고 있는 책 (now), 2 : 읽은 책 (done), 3 : 읽고 싶은 책 (wish)
+    status = models.IntegerField()       # 0 : 읽고 있는 책들 중 메인 책, 1 : 읽고 있는 책 (now), 2 : 읽은 책 (done), 3 : 읽고 싶은 책 (wish)
 
 
     class Meta:
