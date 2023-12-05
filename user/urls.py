@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('register/', views.RegisterAPIView.as_view()),
+    path('base/<int:user_id>/', views.UserInfoAPIView.as_view()),
     path('base/login/', views.LoginAPIView.as_view()),
     path('token/refresh/', TokenRefreshView.as_view()), # 토큰 재발급
     # 소셜로그인

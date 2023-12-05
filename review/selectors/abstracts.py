@@ -43,6 +43,14 @@ class AbstractReviewSelector(metaclass=ABCMeta):
     def report_review_by_genre(user_id:int) -> List:
         pass
     
+    @abstractmethod
+    def review_like_scrap_count(review_id:int, flag:int) -> int:
+        pass
+    
+    @abstractmethod
+    def get_user_by_review_id(reveiw_id:int) -> User:
+        pass
+    
 class ReviewSelector(AbstractReviewSelector):
     def report_review_by_genre(user_id:int) -> List:
         user = get_object_or_404(User, id=user_id)
@@ -55,6 +63,7 @@ class ReviewSelector(AbstractReviewSelector):
         if sort_id == 1:
             # 최신순으로 정렬
             reviews = Review.objects.filter(storage=True).order_by('saved_at')
+            return reviews
         else:
             random_sort = random.sample(['likes','genre'], 1)
             # 추천순으로 정렬
@@ -108,3 +117,17 @@ class ReviewSelector(AbstractReviewSelector):
         review_list = Review.objects.filter(review_id__in = userreviews_objects, saved_at__year=year).annotate(month=TruncMonth('saved_at')).values('month').annotate(count=Count('review_id')).values('month','count')
         print(review_list)
         return review_list
+    
+    def review_like_scrap_count(review_id:int, flag:int) -> int:
+        review =  ReviewSelector.get_review_by_review_id(review_id=review_id)
+        if flag == 0:
+            total = ReviewLike.objects.filter(review=review).count
+        else:
+            total = ReviewScrap.objects.filter(review=review).count
+        return total
+    
+    def get_user_by_review_id(review_id:int) -> User:
+        review =  ReviewSelector.get_review_by_review_id(review_id=review_id)
+        userreview = UserReview.objects.select_related('user').filter(review=review)
+        return userreview.user
+        

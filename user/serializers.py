@@ -31,4 +31,23 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
+        
+class UserSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('avatar_url', 'nickname',)
+        
+class UserNicknameSerializer(serializers.ModelSerializer):
+    def validate(self, attrs):
+        if self.instance is not None:
+            return super().validate(attrs)
+        
+        if User.objects.filter(title=attrs['nickname']).exists():
+            raise serializers.ValidationError("Duplicated nickname.")
+        
+        return super().validate(attrs)
+    
+    class Meta:
+        model = User
+        fields = ('nickname',)
     
