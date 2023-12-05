@@ -53,6 +53,11 @@ class ReviewSortView(APIView):
         reviews = ReviewService(ReviewSelector).get_reviews(sort_id, user_id)
         return Response(reviews, status=status.HTTP_200_OK)
     
+class SingleReviewAPIView(APIView):
+    def get(self, request, review_id):
+        review = ReviewService(ReviewSelector).get_each_community_review(review_id)
+        return Response(review, status=status.HTTP_200_OK)
+    
 class ReviewComment(APIView):
     def post(self, request, user_id, review_id):
         ReviewService(ReviewSelector).review_comment(user_id,review_id,request.data['comment'])

@@ -38,16 +38,6 @@ class SavedReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('titie', 'content', 'category', 'genre', 'book_image',)
-        
-class ReviewLikeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ReviewLike
-        fields = '__all__'
-
-class ReviewScrapSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ReviewScrap
-        fields = '__all__'  
          
          
          

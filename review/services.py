@@ -1,6 +1,6 @@
 from .selectors.abstracts import ReviewSelector
 from typing import List, Optional, Dict
-from .serializers import ReviewSerializer, ReviewListSerializer, ReviewTitleSerializer
+from .serializers import ReviewSerializer, ReviewListSerializer, ReviewTitleSerializer, AllReviewCommunitySerializer, SingleReviewCommunitySerializer
 from .models import Review, ReviewComment, ReviewLike, ReviewScrap
 from django.shortcuts import get_object_or_404
 
@@ -12,7 +12,7 @@ class ReviewService:
         
     def get_reviews(self, sort_id:int, user_id:int) -> List:
         reviews = self.selector.get_review_all(sort_id=sort_id, user_id=user_id)
-        serializer = ReviewSerializer(reviews, many=True)
+        serializer = AllReviewCommunitySerializer(reviews, many=True)
         return serializer.data
     
     def get_myreviews(self, user_id:int) -> List:
@@ -28,6 +28,11 @@ class ReviewService:
     def get_each_review(self, review_id:int) -> Review:
         review = self.selector.get_review_by_review_id(review_id=review_id)
         return review
+    
+    def get_each_community_review(self, review_id:int) -> List:
+        review = self.selector.get_review_by_review_id(review_id=review_id)
+        serializer = SingleReviewCommunitySerializer(review, many=True)
+        return serializer
     
     def update_review(self, review_id:int, content: Optional[str]) -> None:
         review = self.selector.get_review_by_review_id(review_id=review_id)
