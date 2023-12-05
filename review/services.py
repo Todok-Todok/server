@@ -1,20 +1,45 @@
 from .selectors.abstracts import ReviewSelector
 from typing import List, Optional, Dict
-from .serializers import ReviewSerializer, ReviewListSerializer, ReviewTitleSerializer, AllReviewCommunitySerializer, SingleReviewCommunitySerializer
-from .models import Review, ReviewComment, ReviewLike, ReviewScrap
+from .serializers import ReviewSerializer, ReviewListSerializer, ReviewTitleSerializer, AllReviewCommunitySerializer, SingleReviewCommentSerializer
+from .models import Review, ReviewComment, UserReview
 from django.shortcuts import get_object_or_404
+from user.serializers import UserSimpleSerializer
 
 from user.models import User
+from book.models import Book
 
+@staticmethod
+def review_format(self, review:Review, user:User):
+    review_serializer = AllReviewCommunitySerializer(review)
+    review_serializer=review_serializer.data
+    user_serializer = UserSimpleSerializer(user)
+    review_serializer.update(user_serializer.data)
+    review_serializer.update({"like_count":self.selector.review_like_scrap_count(review.review_id,0),"scrap_count":self.selector.review_like_scrap_count(review.review_id,1)})
+    return review_serializer
+    
 class ReviewService:
     def __init__(self, selector: ReviewSelector):
         self.selector = selector
+    
+    def create_review(self, book_id: int, user_id:int, review_id:int) -> None:
+        book=get_object_or_404(Book,book_id=book_id)
+        review = self.selector.get_review_by_review_id(review_id=review_id)
+        review.book=book
+        review.save()
+        user=get_object_or_404(User,id=user_id)
+        UserReview.objects.create(book=book,review=review,user=user)
+        return None
         
     def get_reviews(self, sort_id:int, user_id:int) -> List:
         reviews = self.selector.get_review_all(sort_id=sort_id, user_id=user_id)
-        serializer = AllReviewCommunitySerializer(reviews, many=True)
-        return serializer.data
-    
+        # 하드 코딩
+        user = get_object_or_404(User,id=user_id)
+        responsebody=[]
+        for review in reviews:
+            review_serializer = review_format(self, review, user_id)
+            responsebody.append(review_serializer)
+        return responsebody
+        
     def get_myreviews(self, user_id:int) -> List:
         myreviews = self.selector.get_userreviews(user_id=user_id)
         serializer = ReviewListSerializer(myreviews, many=True)
@@ -29,10 +54,15 @@ class ReviewService:
         review = self.selector.get_review_by_review_id(review_id=review_id)
         return review
     
-    def get_each_community_review(self, review_id:int) -> List:
+    def get_each_community_review(self, review_id:int, user_id:int) -> List:
         review = self.selector.get_review_by_review_id(review_id=review_id)
-        serializer = SingleReviewCommunitySerializer(review, many=True)
-        return serializer
+        # 하드코딩
+        user = get_object_or_404(User,id=user_id)
+        review_serializer = review_format(self, review, user)
+        usercomments=self.selector.comments_by_review_id(review_id)
+        comment_serializer=SingleReviewCommentSerializer(usercomments,many=True)
+        review_serializer.update({"comments":comment_serializer.data})
+        return review_serializer
     
     def update_review(self, review_id:int, content: Optional[str]) -> None:
         review = self.selector.get_review_by_review_id(review_id=review_id)

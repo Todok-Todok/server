@@ -7,10 +7,11 @@ from .services import ReviewService
 from .selectors.abstracts import ReviewSelector
 # Create your views here.
 class ReviewCreateView(APIView):
-    def post(self, request, book_id):
+    def post(self, request, book_id, user_id):
         serializer = ReviewSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            ReviewService(ReviewSelector).create_review(book_id,user_id,serializer.data['review_id'])
             return Response(status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_206_PARTIAL_CONTENT)
@@ -35,7 +36,7 @@ class ReviewContentView(APIView):
         else:
             serializer = SavedReviewSerializer(review_obj)
             
-        return Response(serializer, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     def patch(self, request, review_id):
         ReviewService(ReviewSelector).update_review(review_id, request.data['content'])
@@ -54,8 +55,8 @@ class ReviewSortView(APIView):
         return Response(reviews, status=status.HTTP_200_OK)
     
 class SingleReviewAPIView(APIView):
-    def get(self, request, review_id):
-        review = ReviewService(ReviewSelector).get_each_community_review(review_id)
+    def get(self, request, review_id, user_id):
+        review = ReviewService(ReviewSelector).get_each_community_review(review_id, user_id)
         return Response(review, status=status.HTTP_200_OK)
     
 class ReviewComment(APIView):

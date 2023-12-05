@@ -2,7 +2,7 @@ from abc import *
 from django.shortcuts import get_object_or_404
 from django.db.models.query import QuerySet
 from django.db.models.functions import TruncMonth
-from review.models import Review, UserReview, ReviewLike, ReviewScrap
+from review.models import Review, UserReview, ReviewLike, ReviewScrap, ReviewComment
 from django.db.models import Count
 
 from typing import Optional,List
@@ -48,7 +48,7 @@ class AbstractReviewSelector(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def get_user_by_review_id(reveiw_id:int) -> User:
+    def comments_by_review_id(review_id:int) -> List:
         pass
     
 class ReviewSelector(AbstractReviewSelector):
@@ -59,10 +59,11 @@ class ReviewSelector(AbstractReviewSelector):
         reviews = userreviews.values('genre').annotate(count=Count('*')).order_by('-count')
         return reviews
     
-    def get_review_all(sort_id:int, user_id:int) -> "QuerySet[Review]":
+    def get_review_all(sort_id:int, user_id:int) -> "Optional[QuerySet[Review]]":
         if sort_id == 1:
             # 최신순으로 정렬
             reviews = Review.objects.filter(storage=True).order_by('saved_at')
+            print(reviews)
             return reviews
         else:
             random_sort = random.sample(['likes','genre'], 1)
@@ -79,18 +80,19 @@ class ReviewSelector(AbstractReviewSelector):
                     genre_reviews = Review.objects.filter(genre=genre)
                     sorted_reviews.extend(genre_reviews)
                     
-                sorted_reviews = Review.objects.filter(id__in=[review.id for review in sorted_reviews])
+                sorted_reviews = Review.objects.filter(review_id__in=[review.review_id for review in sorted_reviews])
                 return sorted_reviews
     
-    def get_userreviews(user_id:int) -> "Optional[QuerySet[UserReview]]":
+    def get_userreviews(user_id:int) -> "Optional[QuerySet[Review]]":
         user = get_object_or_404(User, id=user_id)
-        userreview=UserReview.objects.filter(user=user)
-        return userreview
+        userreview=UserReview.objects.filter(user=user).values_list("review")
+        reviews = Review.objects.filter(review_id__in = userreview)
+        return reviews
 
     def get_temporary_review(user_id:int) -> "Optional[QuerySet[Review]]":
         user = get_object_or_404(User, id=user_id)
-        userreviews_objects = UserReview.objects.filter(user=user, storage=False).values_list("review",flat=True).order_by('review_id')
-        reviews = Review.objects.filter(review_id__in = userreviews_objects)
+        userreviews_objects = UserReview.objects.filter(user=user).values_list("review",flat=True).order_by('review_id')
+        reviews = Review.objects.filter(review_id__in = userreviews_objects, storage=False)
         return reviews
     
     def get_review_by_review_id(review_id:int) -> Review:
@@ -115,19 +117,18 @@ class ReviewSelector(AbstractReviewSelector):
         user = get_object_or_404(User, id=user_id)
         userreviews_objects = UserReview.objects.filter(user=user).values_list("review",flat=True).order_by('review_id')
         review_list = Review.objects.filter(review_id__in = userreviews_objects, saved_at__year=year).annotate(month=TruncMonth('saved_at')).values('month').annotate(count=Count('review_id')).values('month','count')
-        print(review_list)
         return review_list
     
     def review_like_scrap_count(review_id:int, flag:int) -> int:
         review =  ReviewSelector.get_review_by_review_id(review_id=review_id)
         if flag == 0:
-            total = ReviewLike.objects.filter(review=review).count
+            total = ReviewLike.objects.filter(review=review).count()
         else:
-            total = ReviewScrap.objects.filter(review=review).count
+            total = ReviewScrap.objects.filter(review=review).count()
         return total
-    
-    def get_user_by_review_id(review_id:int) -> User:
-        review =  ReviewSelector.get_review_by_review_id(review_id=review_id)
-        userreview = UserReview.objects.select_related('user').filter(review=review)
-        return userreview.user
+        
+    def comments_by_review_id(review_id:int) -> "Optional[QuerySet[ReviewComment]]":
+        review = ReviewSelector.get_review_book_by_review_id(review_id=review_id)
+        usercomments = ReviewComment.objects.filter(book=review.book,review=review).select_related('user')
+        return usercomments
         
