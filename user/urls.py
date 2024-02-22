@@ -7,6 +7,7 @@ urlpatterns = [
     path('base/<int:user_id>/', views.UserInfoAPIView.as_view()),
     path('base/login/', views.LoginAPIView.as_view()),
     path('token/refresh/', TokenRefreshView.as_view()), # 토큰 재발급
+    path('notification/<int:user_id>/', views.NotificationAPIView.as_view()),
     # 소셜로그인
     # 구글
     path('google/callback/', views.google_callback, name='google_callback'),  

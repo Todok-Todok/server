@@ -25,9 +25,9 @@ class QuestionShareView(APIView):
         return Response(status=status.HTTP_200_OK)
     
 class QuestionReceiveView(APIView):
-    def get(self, request, book_id):
+    def get(self, request, book_id, user_id):
         try:
-            samplelist = QuestionService(QuestionSelector).receive_question(book_id)
+            samplelist = QuestionService(QuestionSelector).receive_question(book_id, user_id)
             return Response(samplelist, status=status.HTTP_200_OK)
         except ValueError:
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -45,7 +45,7 @@ class QuestionContentView(APIView):
         QuestionService(QuestionSelector).update_question(user_id, question_id,request.data["opinion"])
         return Response(status=status.HTTP_200_OK)
     
-    # 공유 받은 질문에 대한 내 생각
+    # 공유받은 질문에 대한 내 의견 불러오기
     def get(self, request, user_id, question_id):
         userquestion = QuestionService(QuestionSelector).get_each_userquestion_info(user_id,question_id)
         serializer = QuestionDetailSerializer(userquestion.question)

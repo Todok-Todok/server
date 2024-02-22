@@ -14,7 +14,8 @@ def review_format(self, review:Review, user:User):
     review_serializer=review_serializer.data
     user_serializer = UserSimpleSerializer(user)
     review_serializer.update(user_serializer.data)
-    review_serializer.update({"like_count":self.selector.review_like_scrap_count(review.review_id,0),"scrap_count":self.selector.review_like_scrap_count(review.review_id,1)})
+    like, scrap = map(bool, self.selector.like_scrap_true_false(review,user))
+    review_serializer.update({"like_count":self.selector.review_like_scrap_count(review.review_id,0),"scrap_count":self.selector.review_like_scrap_count(review.review_id,1),"like":like,"scrap":scrap}) 
     return review_serializer
     
 class ReviewService:
@@ -36,7 +37,7 @@ class ReviewService:
         user = get_object_or_404(User,id=user_id)
         responsebody=[]
         for review in reviews:
-            review_serializer = review_format(self, review, user_id)
+            review_serializer = review_format(self, review, user)
             responsebody.append(review_serializer)
         return responsebody
         
@@ -76,16 +77,17 @@ class ReviewService:
         ReviewComment.objects.create(user=user,book=review.book,review=review,comment=comment)
         return None
     
-    def review_like_scrap(self, user_id:int, review_id:int, flag:int) -> None:
+    def review_like_scrap(self, user_id:int, review_id:int, flag:int) -> bool:
         # like 표시하기
         if flag == 0:
-            created = self.selector.checking_like_scrap_duplication(user_id=user_id, review_id=review_id,flag=0)
+            obj, created = self.selector.checking_like_scrap_duplication(user_id=user_id, review_id=review_id,flag=0)
         # scrap 하기
         else:
-            created = self.selector.checking_like_scrap_duplication(user_id=user_id, review_id=review_id,flag=1)
+            obj, created = self.selector.checking_like_scrap_duplication(user_id=user_id, review_id=review_id,flag=1)
         if not created:
-            raise ValueError("이미 좋아요 또는 스크랩 표시를 했습니다 !")
-        return None
+            #raise ValueError("이미 좋아요 또는 스크랩 표시를 했습니다 !")
+            obj.delete()
+        return created
     
     def review_report(self, user_id:int, year:int) -> Dict[str, List]:
         by_genre = self.selector.report_review_by_genre(user_id=user_id)

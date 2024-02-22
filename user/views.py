@@ -3,14 +3,14 @@ import jwt
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
-from .serializers import RegisterSerializer,UserSerializer, UserNicknameSerializer
+from .serializers import RegisterSerializer,UserSerializer, UserNicknameSerializer, NotificationSerializer
 from rest_framework import status
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 
 from django.shortcuts import get_object_or_404
-from .models import User
+from .models import User, Notification
 
 import secret
 # Create your views here.
@@ -28,8 +28,8 @@ class RegisterAPIView(APIView):
             user = serializer.save()
             res = Response(
                 {
-                    "user": serializer.data,
-                    "message": "register successs",
+                    #"user": serializer.data,
+                    #"message": "register successs",
                     "token": generate_tokens(user),
                 },
                 status=status.HTTP_200_OK,
@@ -61,7 +61,7 @@ class UserInfoAPIView(APIView):
 # 유저 인증
 class LoginAPIView(APIView):
     def post(self, request):
-        user = authenticate(email=request.data["email"], password=request.data["password"], nickname=request.data["nickname"])
+        user = authenticate(email=request.data["email"], password=request.data["password"])
         # 이미 회원가입 된 유저일 때
         serializer = UserSerializer(instance=user)
         update_last_login(None, user)
@@ -69,8 +69,8 @@ class LoginAPIView(APIView):
         if user:
             res = Response(
                 {
-                    "user": serializer.data,
-                    "message": "login success",
+                    #"user": serializer.data,
+                    #"message": "login success",
                     "token": generate_tokens(user),
                 },
                 status=status.HTTP_200_OK,
@@ -79,6 +79,13 @@ class LoginAPIView(APIView):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+# 사용자 Notification 불러오기
+class NotificationAPIView(APIView):
+    def get(self, request, user_id):
+        user=get_object_or_404(User, id=user_id)
+        notification=Notification.objects.filter(user=user)
+        serializer=NotificationSerializer(notification, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # 소셜로그인
@@ -100,7 +107,7 @@ from rest_framework.decorators import api_view
 '''
 
 state = getattr(secret, 'STATE')
-BASE_URL = 'http://127.0.0.1:8000/'
+BASE_URL = 'http://43.200.136.184:8000/'
 GOOGLE_CALLBACK_URI = BASE_URL + 'user/google/callback/'
 KAKAO_CALLBACK_URI = BASE_URL + 'user/kakao/callback/'
 
@@ -138,7 +145,7 @@ def google_callback(request):
         if accept_status != 200:
             return Response({'err_msg': 'failed to signup'}, status=accept_status)
         accept_json = accept.json()
-        #accept_json.pop('user', None) # 유저 정보 (pk, email) 는 response에서 빼고 싶을 때 !
+        accept_json.pop('user', None) # 유저 정보 (pk, email) 는 response에서 빼고 싶을 때 !
         return Response(accept_json) 
     
 class GoogleLogin(SocialLoginView):
@@ -195,7 +202,7 @@ def kakao_callback(request):
             return Response({'err_msg': 'failed to signup'}, status=accept_status)
         # user의 pk, email, first name, last name과 Access Token, Refresh token 가져옴
         accept_json = accept.json()
-        # accept_json.pop('user', None)
+        accept_json.pop('user', None)
         return Response(accept_json)
     
     

@@ -54,7 +54,8 @@ class Notification(models.Model):
     title=models.CharField(max_length=100)
     content=models.TextField()
     created_at=models.DateTimeField(auto_now_add=True)
-    
+    question_id =models.IntegerField()
+
     class Meta:
         managed = True
         db_table = 'Notification'

@@ -28,7 +28,10 @@ class QuestionService:
         responsebody = []
         if userquestions_mine is not None:
             for userquestion in userquestions_mine:
-                responsebody.append(userquestion.question.content)
+                temp={}
+                temp["content"]=userquestion.question.content
+                temp["question_id"]=userquestion.question.question_id
+                responsebody.append(temp)
             return responsebody
         else:
             return None
@@ -38,9 +41,10 @@ class QuestionService:
         if userquestions_received is not None:
             responsebody = []
             for userquestion in userquestions_received:
-                temp=[]
-                temp.append(userquestion.question.content)
-                temp.append(userquestion.like)
+                temp={}
+                temp["content"]=userquestion.question.content
+                temp["question_id"]=userquestion.question.question_id
+                temp["like"]=userquestion.like
                 responsebody.append(temp)
             return responsebody
         else:
@@ -71,8 +75,8 @@ class QuestionService:
         else:
             raise ValueError("질문을 공개로 전환해야 공유가 가능합니다 !")
     
-    def receive_question(self, book_id:int) -> List:
-        questions = self.selector.get_question_queryset_by_userquestion(book_id=book_id)
+    def receive_question(self, book_id:int, user_id:int) -> List:
+        questions = self.selector.get_question_queryset_by_userquestion(book_id=book_id,user_id=user_id)
         serializer = QuestionContentSerializer(questions, many=True)
         # 리스트에서 2개 랜덤 추출
         if len(questions) >= 2:
