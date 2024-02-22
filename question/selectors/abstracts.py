@@ -18,7 +18,7 @@ class AbstractQuestionSelector(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def get_question_queryset_by_userquestion(book_id: int) -> "QuerySet[Question]":
+    def get_question_queryset_by_userquestion(book_id: int, user_id: int) -> "QuerySet[Question]":
         pass
     
     @abstractmethod
@@ -49,11 +49,14 @@ class QuestionSelector(AbstractQuestionSelector):
         book = get_object_or_404(Book, book_id=book_id)
         return UserQuestion.objects.filter(user=user,book=book,q_owner=True)
     
-    def get_question_queryset_by_userquestion(book_id: int) -> "QuerySet[Question]":
+    def get_question_queryset_by_userquestion(book_id: int,user_id: int) -> "QuerySet[Question]":
+        user = get_object_or_404(User, id=user_id)
         book = get_object_or_404(Book, book_id=book_id)
+        userquestion = UserQuestion.objects.filter(user=user,book=book).values_list("question",flat=True)
         userquestions_objects = UserQuestion.objects.filter(book=book).values_list("question",flat=True).order_by("question_id")
+        target_objects = list(set(userquestions_objects).difference(userquestion))
         # disclosure = True 조건 추가 필요 !
-        questions = Question.objects.filter(question_id__in = userquestions_objects).filter(disclosure=True).order_by('question_id')
+        questions = Question.objects.filter(question_id__in = target_objects).filter(disclosure=True).order_by('question_id')
         return questions
     
     def get_users_by_question_id(question_id: int) -> "QuerySet[User]":

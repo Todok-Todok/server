@@ -1,4 +1,4 @@
-from .models import User
+from .models import User, Notification
 from rest_framework import serializers, validators
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -50,4 +50,9 @@ class UserNicknameSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('nickname',)
-    
+ 
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+         model = Notification
+         fields = ('title','content','question_id','created_at',)
+

@@ -66,13 +66,19 @@ class ReviewComment(APIView):
 
 class ReviewLikeView(APIView):
     def post(self, request, user_id, review_id):
-        ReviewService(ReviewSelector).review_like_scrap(user_id, review_id,0)
-        return Response(status=status.HTTP_201_CREATED)
+        created = ReviewService(ReviewSelector).review_like_scrap(user_id, review_id,0)
+        if not created:
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_201_CREATED)
 
 class ReviewScrapView(APIView):
     def post(self, request, user_id, review_id):
-        ReviewService(ReviewSelector).review_like_scrap(user_id, review_id,1)
-        return Response(status=status.HTTP_201_CREATED)
+        created = ReviewService(ReviewSelector).review_like_scrap(user_id, review_id,1)
+        if not created:
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_201_CREATED)
 
 # 통계 페이지 관련 API
 class ReviewReportView(APIView):

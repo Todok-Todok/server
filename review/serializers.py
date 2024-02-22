@@ -28,19 +28,28 @@ class ReviewTitleSerializer(serializers.ModelSerializer):
 
 
 class TemporaryReviewSerializer(serializers.ModelSerializer):
+    book_title = serializers.SerializerMethodField()
+
+    def get_book_title(self, obj):
+        return obj.book.title
+
     class Meta:
         model = Review
-        fields = ('title','content','genre','category','disclosure',)
+        fields = ('title','content','genre','category','disclosure', 'book_title')
         
 class SavedReviewSerializer(serializers.ModelSerializer):
     book_image = serializers.SerializerMethodField()
-    
+    book_title = serializers.SerializerMethodField()
+
     def get_book_image(self, obj):
         return obj.book.book_image
     
+    def get_book_title(self, obj):
+        return obj.book.title
+
     class Meta:
         model = Review
-        fields = ('title', 'content', 'category', 'genre', 'book_image',)
+        fields = ('title', 'content', 'category', 'genre','disclosure', 'book_image', 'book_title')
          
 class ReviewLikeSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField(source='review')
@@ -66,7 +75,7 @@ class AllReviewCommunitySerializer(serializers.ModelSerializer):
     class Meta:
         abstract=True
         model = Review
-        fields = ('title','saved_at',)
+        fields = ('review_id','content','title','saved_at',)
         
 class SingleReviewCommentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):

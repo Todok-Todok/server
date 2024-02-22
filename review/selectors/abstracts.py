@@ -5,18 +5,18 @@ from django.db.models.functions import TruncMonth
 from review.models import Review, UserReview, ReviewLike, ReviewScrap, ReviewComment
 from django.db.models import Count
 
-from typing import Optional,List
+from typing import Optional,List,Tuple
 import random
 from user.models import User
 from book.models import Book
 
 class AbstractReviewSelector(metaclass=ABCMeta):
     @abstractmethod
-    def get_review_all(sort_id:int) -> "QuerySet[Review]":
+    def get_review_all(sort_id:int,user_id:int) -> "Optional[QuerySet[Review]]":
         pass
     
     @abstractmethod
-    def get_userreviews(user_id:int) -> "Optional[QuerySet[UserReview]]":
+    def get_userreviews(user_id:int) -> "Optional[QuerySet[Review]]":
         pass
     
     @abstractmethod
@@ -51,6 +51,10 @@ class AbstractReviewSelector(metaclass=ABCMeta):
     def comments_by_review_id(review_id:int) -> List:
         pass
     
+    @abstractmethod
+    def like_scrap_true_false(review:Review,user:User) -> Tuple[bool,bool]:
+        pass
+
 class ReviewSelector(AbstractReviewSelector):
     def report_review_by_genre(user_id:int) -> List:
         user = get_object_or_404(User, id=user_id)
@@ -86,7 +90,7 @@ class ReviewSelector(AbstractReviewSelector):
     def get_userreviews(user_id:int) -> "Optional[QuerySet[Review]]":
         user = get_object_or_404(User, id=user_id)
         userreview=UserReview.objects.filter(user=user).values_list("review")
-        reviews = Review.objects.filter(review_id__in = userreview)
+        reviews = Review.objects.filter(review_id__in = userreview,storage=True)
         return reviews
 
     def get_temporary_review(user_id:int) -> "Optional[QuerySet[Review]]":
@@ -108,10 +112,10 @@ class ReviewSelector(AbstractReviewSelector):
         review = ReviewSelector.get_review_book_by_review_id(review_id=review_id)
         
         if flag == 0: # ReviewLike 테이블 체크 !
-            obj, created = ReviewLike.objects.get_or_create(user=user, book=review.book, review=review)
+            obj, created = ReviewLike.objects.get_or_create(user=user, book=review.book, review=review) # 생성되면 True, 꺼내오면 False
         else:
             obj, created = ReviewScrap.objects.get_or_create(user=user, book=review.book, review=review)
-        return created
+        return obj, created
     
     def report_review_count_by_date(user_id:int, year:int) -> List:
         user = get_object_or_404(User, id=user_id)
@@ -132,3 +136,7 @@ class ReviewSelector(AbstractReviewSelector):
         usercomments = ReviewComment.objects.filter(book=review.book,review=review).select_related('user')
         return usercomments
         
+    def like_scrap_true_false(review:Review,user:User) -> Tuple[bool,bool]:
+        like=ReviewLike.objects.filter(review=review,user=user).exists()
+        scrap=ReviewScrap.objects.filter(review=review, user=user).exists()
+        return (like,scrap)
