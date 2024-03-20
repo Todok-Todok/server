@@ -1,0 +1,16 @@
+venv/
+Dockerfile
+.dockerignore
+
+.git
+.gitignore
+
+
+# Python
+.idea
+server/__pyache__/
+server/*__pyache__/
+server/*/*/__pyache__/
+server/*/*/*/__pyache__/
+.env/
+.venv/
